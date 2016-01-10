@@ -10,7 +10,7 @@ except ImportError:
 
 
 def total_size(o, handlers={}, verbose=False, readable_output=True):
-    """ Returns the approximate memory footprint an object and all of its contents.
+    """Returns the memory footprint (aprox.) an object and all of its contents.
 
     Automatically finds the contents of the following builtin containers and
     their subclasses:  tuple, list, deque, dict, set and frozenset.
@@ -20,6 +20,8 @@ def total_size(o, handlers={}, verbose=False, readable_output=True):
                     OtherContainerClass: OtherContainerClass.get_elements}
 
     """
+    #TODO(alexmarco): put credits of this function (ActiveState CookBook).
+
     dict_handler = lambda d: chain.from_iterable(d.items())
     all_handlers = {
         tuple: iter,
@@ -29,14 +31,16 @@ def total_size(o, handlers={}, verbose=False, readable_output=True):
         set: iter,
         frozenset: iter
     }
-    all_handlers.update(handlers)     # user handlers take precedence
+    # user handlers take precedence
+    all_handlers.update(handlers)
     # track which object id's have already been seen
     seen = set()
     # estimate sizeof object without __sizeof__
     default_size = getsizeof(0)
 
     def sizeof(o):
-        if id(o) in seen:       # do not double count the same object
+        # do not double count the same object
+        if id(o) in seen:
             return 0
         seen.add(id(o))
         s = getsizeof(o, default_size)
@@ -56,6 +60,8 @@ def total_size(o, handlers={}, verbose=False, readable_output=True):
 
 
 def sizeof_fmt(num, suffix='B'):
+    """Format size data in human readable."""
+    #TODO(alexmarco): put credits of this function (stackoverflow).
     for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
@@ -64,7 +70,7 @@ def sizeof_fmt(num, suffix='B'):
 
 
 class SDict(object):
-    u"""Create objects
+    """Create objects accessed by attribute or by item.
     """
     def __init__(self, *args, **kwargs):
         self.__dict__.update(*args, **kwargs)
@@ -87,6 +93,8 @@ class SDict(object):
 
 
 def encode(data, encoding='utf-8'):
+    """Return data encoded (recursive function).
+    """
     if isinstance(data, basestring):
         if not isinstance(data, unicode):
             return unicode(data, encoding)
@@ -97,43 +105,11 @@ def encode(data, encoding='utf-8'):
         return unicode(data)
 
 
-def text_table(container, options={}):
-    u"""Print container data in terminal text table.
-
-    The container object is any object iterable.
-    The options parameter is a dict containing the format parameters:
-
-
-    """
-    header_opt = options.get('header', False)
-    instrospect_lines = options.get('instrospect_lines', len(container))
-    borderHorizontal = options.get('borderHorizontal', '-')
-    borderVertical = options.get('borderVertical', '|')
-    borderCross = options.get('borderCross', '+')
-
-    header = container[0] if header_opt else None
-
-    cols = [list(x) for x in zip(*container[:instrospect_lines])]
-    lengths = [max(map(len, map(encode, col))) for col in cols]
-    f = (borderVertical
-         + borderVertical.join(u' {:>%d} ' % l for l in lengths)
-         + borderVertical)
-    s = (borderCross
-         + borderCross.join(borderHorizontal * (l+2) for l in lengths)
-         + borderCross)
-
-    output = []
-    output.append(s)
-    for erow in (encode(row) for row in container):
-        line = f.format(*erow)+'\n' + s
-        output.append(line)
-    return '\n'.join(output).encode('utf-8')
-
-
 suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 
 
 def size_fmt(nbytes):
+    """Format size data in human readable."""
     if nbytes == 0:
         return '0 B'
     i = 0
